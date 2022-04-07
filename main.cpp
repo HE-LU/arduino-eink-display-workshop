@@ -1,16 +1,15 @@
-#include <EEPROM.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
 #include <GxEPD2_3C.h>
 #include <GxEPD2_BW.h>
-#include <Fonts/FreeMonoBold9pt7b.h> // fonts: https://github.com/adafruit/Adafruit-GFX-Library/tree/master/Fonts
+#include <Fonts/FreeSerif9pt7b.h> // fonts: https://github.com/adafruit/Adafruit-GFX-Library/tree/master/Fonts
 
 #include "main.h"
 #include "display.h"
 #include "wifi.h"
 #include "examples.h"
 
-const String SPREADSHEET_URL = "https://sheets.googleapis.com/v4/spreadsheets/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/values/"
+const String SPREADSHEET_URL = "https://sheets.googleapis.com/v4/spreadsheets/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/values/"
 							   "Arduino?alt=json&valueRenderOption=FORMATTED_VALUE&key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 const String WIFI_SSIDS[ARRAY_SIZE] = {"wifi1", "wifi2"};
 const String WIFI_PASSWORDS[ARRAY_SIZE] = {"pass1", "pass2"};
@@ -19,11 +18,16 @@ int main()
 {
 	//connectToWiFi(WIFI_SSIDS[0], WIFI_PASSWORDS[0]);
 	connectToMultiWiFi(WIFI_SSIDS, WIFI_PASSWORDS);
-	loadData(SPREADSHEET_URL);
+	StaticJsonDocument<JSON_BUFFER_SIZE> data = loadData(SPREADSHEET_URL);
+	disconnectWiFi();
+
+	DataHolder dataHolder = parseData(data);
+
+	displayData(dataHolder);
 	return 0;
 }
 
-void loadData(String url)
+StaticJsonDocument<JSON_BUFFER_SIZE> loadData(String url)
 {
 	Serial.println("Loading data from: " + url);
 
@@ -36,6 +40,7 @@ void loadData(String url)
 
 	int httpStatus = httpClient.GET();
 	String payload = httpClient.getString();
+	httpClient.end();
 
 	Serial.print("HTTP status code: ");
 	Serial.println(httpStatus);
@@ -53,8 +58,8 @@ void loadData(String url)
 		}
 		else
 		{
-			Serial.println("Parsing JSON data");
-			parseData(jsonBuffer);
+			Serial.println("Parsing JSON data success");
+			return jsonBuffer;
 		}
 	}
 	else
@@ -62,10 +67,10 @@ void loadData(String url)
 		Serial.println("HTTP response error");
 	}
 
-	httpClient.end();
+	return StaticJsonDocument<JSON_BUFFER_SIZE>();
 }
 
-void parseData(StaticJsonDocument<JSON_BUFFER_SIZE>& jsonBuffer)
+DataHolder parseData(StaticJsonDocument<JSON_BUFFER_SIZE>& jsonBuffer)
 {
 	String header = jsonBuffer["values"][0][0].as<String>();
 
@@ -89,10 +94,10 @@ void parseData(StaticJsonDocument<JSON_BUFFER_SIZE>& jsonBuffer)
 	String portfolioGain = jsonBuffer["values"][4][2].as<String>();
 	String footer = portfolioValue + "  " + portfolioReturn + "  " + portfolioGain;
 
-	displayData(header, item1, item2, item3, footer);
+	return DataHolder(header, item1, item2, item3, footer);
 }
 
-void displayData(String header, String item1, String item2, String item3, String footer)
+void displayData(DataHolder data)
 {
 	display.init(115200);
 	display.setRotation(3); // landscape
@@ -112,14 +117,14 @@ void displayData(String header, String item1, String item2, String item3, String
 	do
 	{
 		display.fillScreen(GxEPD_WHITE);
-		display.setFont(&FreeMonoBold9pt7b);
+		display.setFont(&FreeSerif9pt7b);
 
 		// header text
 		display.setTextColor(GxEPD_RED);
-		display.getTextBounds(header, 0, 0, &textBoundsX, &textBoundsY, &textBoundsWidth, &textBoundsHeight);
+		display.getTextBounds(data.header, 0, 0, &textBoundsX, &textBoundsY, &textBoundsWidth, &textBoundsHeight);
 		uint16_t headerX = ((display.width() - textBoundsWidth) / 2) - textBoundsX;
 		display.setCursor(headerX, paddingTop);
-		display.print(header);
+		display.print(data.header);
 
 		// header line
 		uint16_t headerLineY = lineHeight + linePadding;
@@ -128,15 +133,15 @@ void displayData(String header, String item1, String item2, String item3, String
 		// text 1
 		display.setTextColor(GxEPD_BLACK);
 		display.setCursor(paddingHorizontal, paddingTop + lineHeight);
-		display.print(item1);
+		display.print(data.item1);
 
 		// text 2
 		display.setCursor(paddingHorizontal, paddingTop + lineHeight * 2);
-		display.print(item2);
+		display.print(data.item2);
 
 		// text 3
 		display.setCursor(paddingHorizontal, paddingTop + lineHeight * 3);
-		display.print(item3);
+		display.print(data.item3);
 
 		// footer line
 		uint16_t footerLineY = (lineHeight * 4) + linePadding;
@@ -144,10 +149,10 @@ void displayData(String header, String item1, String item2, String item3, String
 
 		// footer text
 		display.setTextColor(GxEPD_RED);
-		display.getTextBounds(footer, 0, 0, &textBoundsX, &textBoundsY, &textBoundsWidth, &textBoundsHeight);
+		display.getTextBounds(data.footer, 0, 0, &textBoundsX, &textBoundsY, &textBoundsWidth, &textBoundsHeight);
 		uint16_t footerX = ((display.width() - textBoundsWidth) / 2) - textBoundsX;
 		display.setCursor(footerX, paddingTop + lineHeight * 4);
-		display.print(footer);
+		display.print(data.footer);
 
 		// rectangle
 		display.drawLine(0, 0, displayWidth, 0, GxEPD_BLACK);
@@ -172,25 +177,4 @@ String alignText(String text, int length, bool toLeft)
 		}
 	}
 	return text;
-}
-
-long eepromExample(long val1, long val2, long val3)
-{
-	long previousVal1 = 0;
-	long previousVal2 = 0;
-	long previousVal3 = 0;
-
-	EEPROM.begin(sizeof(long) * 10);
-
-	EEPROM.get(0, previousVal1);
-	EEPROM.get(sizeof(long), previousVal2);
-	EEPROM.get(sizeof(long) * 2, previousVal3);
-
-	EEPROM.put(0, val1);
-	EEPROM.put(sizeof(long), val2);
-	EEPROM.put(sizeof(long) * 2, val3);
-
-	EEPROM.commit();
-
-	return val1 + val2 + val3;
 }
