@@ -61,3 +61,8 @@ bool connectToMultiWiFi(const String ssids[ARRAY_SIZE], const String passwords[A
 
 	return WiFi.status() == WL_CONNECTED;
 }
+
+void disconnectWiFi()
+{
+	WiFi.mode(WIFI_OFF);
+}
