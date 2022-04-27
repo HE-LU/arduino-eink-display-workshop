@@ -51,12 +51,12 @@ Some components can be much cheaper when bought in bulk.
   - Add additional boards manager URL: http://arduino.esp8266.com/stable/package_esp8266com_index.json
   - Tools -> Board -> Boards Manager
   - Search for **ESP8266** and press install button for the “ESP8266 by ESP8266 Community“
-  - Select the board in Tools -> Boards -> ESP8266 Boards -> **NodeMCU 1.0 (ESP-12E Module)**
+  - Select the board in Tools -> Boards -> ESP8266 Boards -> **NodeMCU 1.0 (ESP-12E Module)** (You may need to restart the IDE first)
 - Install libraries in Arduino IDE
   - Tools -> Manage Libraries
   - Search and install **GxEPD2**, **ArduinoJson** and **Adafruit BusIO**
 - Tools -> Upload Speed -> 921600
-- Tools -> Serial Monitor
+- You will need to select correct USB port (Tools -> Port)
 
 ### Advanced IDE Setup
 1. Download VSCode if you don't have it already
