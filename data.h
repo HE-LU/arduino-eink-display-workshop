@@ -4,13 +4,13 @@
 class DataHolder
 {
 public:
-	String header;
-	String item1;
-	String item2;
-	String item3;
-	String footer;
+	const char* header;
+	const char* item1;
+	const char* item2;
+	const char* item3;
+	const char* footer;
 
-	DataHolder(String _header, String _item1, String _item2, String _item3, String _footer)
+	DataHolder(const char* _header, const char* _item1, const char* _item2, const char* _item3, const char* _footer)
 		: header{_header}
 		, item1{_item1}
 		, item2{_item2}

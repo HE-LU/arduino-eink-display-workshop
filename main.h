@@ -2,15 +2,17 @@
 #define _MAIN_H_
 
 #include <ArduinoJson.h>
+
+#include "logs.h"
 #include "data.h"
+#include "display.h"
+#include "wifi.h"
+#include "examples.h"
 
 #define JSON_BUFFER_SIZE 1024 // buffer size: https://arduinojson.org/assistant/
 
 int main();
-StaticJsonDocument<JSON_BUFFER_SIZE> loadData(String url);
-DataHolder parseData(StaticJsonDocument<JSON_BUFFER_SIZE>& jsonBuffer);
-void displayData(DataHolder data);
-String alignText(String text, int length, bool toLeft);
-long eepromExample(long val1, long val2, long val3);
+void loadData(String url, StaticJsonDocument<JSON_BUFFER_SIZE>* jsonBuffer);
+DataHolder parseData(StaticJsonDocument<JSON_BUFFER_SIZE>* jsonBuffer);
 
 #endif

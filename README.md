@@ -65,7 +65,7 @@ Some components can be much cheaper when bought in bulk.
 4. When popup with C++ support appear, feel free to install it
 5. When popup "Configure your IntelliSense settings to help find missing headers" appears, you can hit skip, or close it.
 6. Enter View -> Command Pallete(Ctrl + Shift + P or Cmd + Shift + P) and run `Arduino: Initialize`
-7. You will be asked to select baord type. You should select following one: `NodeMCU 1.0(ESP-12E Module)`
+7. You will be asked to select board type. You should select following one: `NodeMCU 1.0(ESP-12E Module)`
 8. Delete file in `.vscode/c_cpp_properties.json` and restart VSCode.
 9. Wait and hope that all files will be correctly initialized and all warning disappear.
 
